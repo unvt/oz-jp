@@ -49,7 +49,7 @@ def charge
 tippecanoe --force --layer=#{layer} -o #{mbtiles_path} \
 --minimum-zoom=#{MINZOOM} --maximum-zoom=#{MAXZOOM} \
 --detect-shared-borders --coalesce --hilbert \
-< #{fifo_path}
+< #{fifo_path} 2>&1
         EOS
       )
     }
@@ -60,12 +60,13 @@ end
 def withdraw(hooks)
   LAYERS[Z_SRC].each {|layer|
     fifo_path = "#{FIFO_DIR}/#{LOT_ZXY.join('-')}-#{layer}"
+    print "Producing vector tiles for #{fifo_path} (pid #{hooks[layer][:pid]})...\n"
+    $stdout.flush
     hooks[layer][:fifo].flush
     hooks[layer][:fifo].close
-    print "waiting for #{hooks[layer][:pid]} / #{layer} ..."
     Process.waitpid(hooks[layer][:pid])
-    print "done.\n"
     system "rm #{fifo_path}"
+    print "done (#{fifo_path}, pid #{hooks[layer][:pid]}).\n"
   }
 end
 
