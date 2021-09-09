@@ -42,13 +42,17 @@ def charge
     mbtiles_path = "#{LOT_DIR}/#{LOT_ZXY.join('-')}-#{layer}.mbtiles"
     system "rm #{fifo_path}" if File.exist?(fifo_path)
     system "mkfifo #{fifo_path}"
-    hooks[layer] = File.open(fifo_path, 'w+')
-    spawn <<-EOS
+    hooks[layer] = {
+      :fifo => File.open(fifo_path, 'w+'),
+      :pid => spawn(
+        <<-EOS
 tippecanoe --force --layer=#{layer} -o #{mbtiles_path} \
 --minimum-zoom=#{MINZOOM} --maximum-zoom=#{MAXZOOM} \
 --detect-shared-borders --coalesce --hilbert \
 < #{fifo_path}
-    EOS
+        EOS
+      )
+    }
   }
   hooks
 end
@@ -56,8 +60,11 @@ end
 def withdraw(hooks)
   LAYERS[Z_SRC].each {|layer|
     fifo_path = "#{FIFO_DIR}/#{LOT_ZXY.join('-')}-#{layer}"
-    hooks[layer].flush
-    hooks[layer].close
+    hooks[layer][:fifo].flush
+    hooks[layer][:fifo].close
+    print "waiting for #{hooks[layer][:pid]} / #{layer} ..."
+    Process.waitpid(hooks[layer][:pid])
+    print "done.\n"
     system "rm #{fifo_path}"
   }
 end
@@ -68,7 +75,6 @@ else
   hooks = charge
   jump_into(LOT_ZXY)
   withdraw(hooks)
-  Process.waitall
 
   system <<-EOS
 tile-join -o #{dst_path} \

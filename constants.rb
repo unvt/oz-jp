@@ -1,15 +1,18 @@
+CONTINUE = false
+
 LIST_URL = 'https://optgeo.github.io/jp-tile-list/list.csv'
 SRC_BASE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/experimental_bvmap'
 
 Z_LOT = 6
-Z_SRC = 10
-MINZOOM = 11
-MAXZOOM = 16
+Z_SRC = 9
+MINZOOM = 10
+MAXZOOM = 18
 
 TMP_DIR = '/mnt/ramdisk'
 FIFO_DIR = 'fifo'
 LOT_DIR = 'lot'
 DST_DIR = 'dst'
+MERGED_DIR = 'merged'
 
 VT2GEOJSON_PATH = '../vt2geojson/cmd/vt2geojson/vt2geojson'
 LAYERS = { # 12..14 data are based on small samples and so not conclusive.
